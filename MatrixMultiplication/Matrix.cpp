@@ -3,11 +3,11 @@
 #include "Matrix.h"
 
 //	M and N initialized by member initializer list
-Matrix::Matrix(size_t _m, size_t _n) : m(_m), n(_n)
+Matrix::Matrix(int _m, int _n) : m(_m), n(_n)
 {
 	// allocate M x N matrix
 	content = new float*[m];
-	for (size_t i = 0; i < m; i++)
+	for (int i = 0; i < m; i++)
 	{
 		content[i] = new float[n];
 	}
@@ -24,15 +24,15 @@ Matrix::Matrix(std::string fileName)
 
 	// allocate M x N matrix
 	content = new float*[m];
-	for (size_t i = 0; i < m; i++)
+	for (int i = 0; i < m; i++)
 	{
 		content[i] = new float[n];
 	}
 
 	// fill the matrix with file conent
-	for (size_t i = 0; i < m; i++)
+	for (int i = 0; i < m; i++)
 	{
-		for (size_t j = 0; j < n; j++)
+		for (int j = 0; j < n; j++)
 		{
 			file >> content[i][j];
 		}
@@ -45,7 +45,7 @@ Matrix::Matrix(std::string fileName)
 Matrix::~Matrix()
 {
 	// free all the memory
-	for (size_t i = 0; i < m; i++)
+	for (int i = 0; i < m; i++)
 	{
 		delete[] content[i];
 	}
@@ -63,9 +63,9 @@ void Matrix::writeToFile(std::string fileName)
 	file << m << " " << n << std::endl;
 
 	// save the content
-	for (size_t i = 0; i < m; i++)
+	for (int i = 0; i < m; i++)
 	{
-		for (size_t j = 0; j < n; j++)
+		for (int j = 0; j < n; j++)
 		{
 			file << content[i][j] << " ";
 		}
@@ -76,7 +76,7 @@ void Matrix::writeToFile(std::string fileName)
 	file.close();
 }
 
-void Matrix::setAt(size_t i, size_t j, float value)
+void Matrix::setAt(int i, int j, float value)
 {
 	content[i][j] = value;
 }

@@ -5,12 +5,12 @@
 class Matrix
 {
 private:
-	size_t m, n;
+	int m, n;
 	float** content;
 
 public:
 	// allocate memory for empity matrix M x N
-	Matrix(size_t _m, size_t _n);
+	Matrix(int _m, int _n);
 
 	// allocate memory for the matrix and read the content from file
 	Matrix(std::string fileName);
@@ -20,12 +20,12 @@ public:
 
 	// getters
 	float** getContent() { return content; }
-	size_t getM() const { return m; }
-	size_t getN() const { return n; }
-	float getAt(size_t i, size_t j) const { return content[i][j]; }
+	int getM() const { return m; }
+	int getN() const { return n; }
+	float getAt(int i, int j) const { return content[i][j]; }
 
 	// write the matrix to file
 	void writeToFile(std::string fileName);
-	// set matrix firld value
-	void setAt(size_t i, size_t j, float value);
+	// set matrix field value
+	void setAt(int i, int j, float value);
 };

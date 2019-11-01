@@ -26,5 +26,6 @@ public:
 
 	// write the matrix to file
 	void writeToFile(std::string fileName);
+	// set matrix firld value
 	void setAt(size_t i, size_t j, float value);
 };

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <string>
 #include <chrono>
 #include <omp.h>
 #include "Matrix.h"
@@ -81,17 +82,23 @@ Matrix* multiply(Matrix* A, Matrix* B)
 	Matrix* result = new Matrix(A->getN(), B->getM());
 
 	// perform the multiplication
-	for (size_t i = 0; i < A->getM(); i++)
+	int i, j, k;
+	#pragma omp parallel shared(A, B, result) private(i, j, k)
 	{
-		for (size_t j = 0; j < B->getN(); j++)
+		#pragma omp for schedule(static)
+		for (i = 0; i < A->getM(); i++)
 		{
-			float temp = 0;
-			for (size_t k = 0; k < A->getN(); k++)
+			for (j = 0; j < B->getN(); j++)
 			{
-				temp += A->getAt(i, k) * B->getAt(k, j);
+				float temp = 0;
+				for (k = 0; k < A->getN(); k++)
+				{
+					temp += A->getAt(i, k) * B->getAt(k, j);
+				}
+				result->setAt(i, j, temp);
+				std::string iteration = "C(" + std::to_string(i) + "," + std::to_string(j) + ") - w¹tek #" + std::to_string(omp_get_thread_num());
+				std::cout << iteration << std::endl;
 			}
-			result->setAt(i, j, temp);
-			std::cout << "C(" << i << "," << j << ")" << std::endl;
 		}
 	}
 

@@ -1,4 +1,6 @@
 #include <iostream>
+#include <chrono>
+#include <omp.h>
 #include "Matrix.h"
 
 Matrix* readFromFile(std::string matrixName);
@@ -17,8 +19,16 @@ int main()
 	// prepare the result matrix
 	Matrix *C = new Matrix(A->getN(), B->getM());
 
+	// start time masurement
+	auto startTime = std::chrono::system_clock::now();
+
 	// multiply the matrices
 	C = multiply(A, B);
+
+	// end time and time difference print
+	auto endTime = std::chrono::system_clock::now();
+	std::chrono::duration<double> time = endTime - startTime;
+	std::cout << "Obliczenia zajê³y " << time.count() << "s." << std::endl;
 
 	// save result to file
 	saveToFile(C);
@@ -67,6 +77,7 @@ Matrix* multiply(Matrix* A, Matrix* B)
 		return nullptr;
 	}
 
+	// create result matrix
 	Matrix* result = new Matrix(A->getN(), B->getM());
 
 	// perform the multiplication

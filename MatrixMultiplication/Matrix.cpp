@@ -19,13 +19,17 @@ Matrix::Matrix(std::string fileName)
 	std::ifstream file;
 	file.open(fileName, std::ifstream::in);
 
-	// read te matrix size
+	// read the matrix size
 	file >> m >> n;
 
-	// allocate M x N matrix using previous constructor
-	Matrix(m, n);
+	// allocate M x N matrix
+	content = new float*[m];
+	for (size_t i = 0; i < m; i++)
+	{
+		content[i] = new float[n];
+	}
 
-	// fill the matrix by file conent
+	// fill the matrix with file conent
 	for (size_t i = 0; i < m; i++)
 	{
 		for (size_t j = 0; j < n; j++)
@@ -70,4 +74,9 @@ void Matrix::writeToFile(std::string fileName)
 
 	// close the file
 	file.close();
+}
+
+void Matrix::setAt(size_t i, size_t j, float value)
+{
+	content[i][j] = value;
 }

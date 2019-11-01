@@ -22,7 +22,9 @@ public:
 	float** getContent() { return content; }
 	size_t getM() const { return m; }
 	size_t getN() const { return n; }
+	float getAt(size_t i, size_t j) const { return content[i][j]; }
 
 	// write the matrix to file
 	void writeToFile(std::string fileName);
+	void setAt(size_t i, size_t j, float value);
 };

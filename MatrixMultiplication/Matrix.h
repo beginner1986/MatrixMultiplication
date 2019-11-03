@@ -6,7 +6,7 @@ class Matrix
 {
 private:
 	int m, n;
-	float** content;
+	float* content;
 
 public:
 	// allocate memory for empity matrix M x N
@@ -19,10 +19,10 @@ public:
 	~Matrix();
 
 	// getters
-	float** getContent() { return content; }
+	float* getContent() { return content; }
 	int getM() const { return m; }
 	int getN() const { return n; }
-	float getAt(int i, int j) const { return content[i][j]; }
+	float getAt(int i, int j) const { return content[i * m + j]; }
 
 	// write the matrix to file
 	void writeToFile(std::string fileName);

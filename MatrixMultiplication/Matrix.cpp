@@ -6,11 +6,7 @@
 Matrix::Matrix(int _m, int _n) : m(_m), n(_n)
 {
 	// allocate M x N matrix
-	content = new float*[m];
-	for (int i = 0; i < m; i++)
-	{
-		content[i] = new float[n];
-	}
+	content = new float[m * n];
 }
 
 Matrix::Matrix(std::string fileName)
@@ -23,18 +19,14 @@ Matrix::Matrix(std::string fileName)
 	file >> m >> n;
 
 	// allocate M x N matrix
-	content = new float*[m];
-	for (int i = 0; i < m; i++)
-	{
-		content[i] = new float[n];
-	}
+	content = content = new float[m * n];
 
 	// fill the matrix with file conent
 	for (int i = 0; i < m; i++)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			file >> content[i][j];
+			file >> content[i * m + j];
 		}
 	}
 
@@ -45,11 +37,6 @@ Matrix::Matrix(std::string fileName)
 Matrix::~Matrix()
 {
 	// free all the memory
-	for (int i = 0; i < m; i++)
-	{
-		delete[] content[i];
-	}
-
 	delete[] content;
 }
 
@@ -67,7 +54,7 @@ void Matrix::writeToFile(std::string fileName)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			file << content[i][j] << " ";
+			file << content[i * m + j] << " ";
 		}
 		file << std::endl;
 	}
@@ -78,5 +65,5 @@ void Matrix::writeToFile(std::string fileName)
 
 void Matrix::setAt(int i, int j, float value)
 {
-	content[i][j] = value;
+	content[i * m + j] = value;
 }

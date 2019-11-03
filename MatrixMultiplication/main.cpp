@@ -5,8 +5,8 @@
 #include "Matrix.h"
 
 Matrix* readFromFile(std::string matrixName);
-void saveToFile(Matrix* matrix);
-Matrix* multiply(Matrix* A, Matrix* B);
+void saveToFile(Matrix& matrix);
+void multiply(const Matrix& A, const Matrix& B, Matrix &result);
 
 int main()
 {
@@ -14,8 +14,8 @@ int main()
 	setlocale(LC_ALL, "polish");
 
 	// read the matrices to multiply
-	Matrix* A = readFromFile("A");
-	Matrix* B = readFromFile("B");
+	Matrix *A = readFromFile("A");
+	Matrix *B = readFromFile("B");
 
 	// prepare the result matrix
 	Matrix *C = new Matrix(A->getN(), B->getM());
@@ -24,7 +24,7 @@ int main()
 	auto startTime = std::chrono::system_clock::now();
 
 	// multiply the matrices
-	C = multiply(A, B);
+	multiply(*A, *B, *C);
 
 	// end time and time difference print
 	auto endTime = std::chrono::system_clock::now();
@@ -32,7 +32,7 @@ int main()
 	std::cout << "Obliczenia zajê³y " << time.count() << "s." << std::endl;
 
 	// save result to file
-	saveToFile(C);
+	saveToFile(*C);
 
 	// free the memory
 	delete A, B, C;
@@ -58,7 +58,7 @@ Matrix* readFromFile(std::string matrixName)
 	return result;
 }
 
-void saveToFile(Matrix* matrix)
+void saveToFile(Matrix& matrix)
 {
 	// get file name
 	std::string fileName;
@@ -66,41 +66,36 @@ void saveToFile(Matrix* matrix)
 	std::cin >> fileName;
 
 	// save matrix to file
-	matrix->writeToFile(fileName);
+	matrix.writeToFile(fileName);
 }
 
-Matrix* multiply(Matrix* A, Matrix* B)
+void multiply(const Matrix& A, const Matrix& B, Matrix &result)
 {
 	// check multiplication correctness condition
-	if (A->getN() != B->getM())
+	if (A.getN() != B.getM())
 	{
 		std::cout << "Nie mo¿na pomno¿yæ tych macierzy!" << std::endl;
-		return nullptr;
+		return;
 	}
-
-	// create result matrix
-	Matrix* result = new Matrix(A->getN(), B->getM());
-
+	
 	// perform the multiplication
 	int i, j, k;
 	#pragma omp parallel shared(A, B, result) private(i, j, k)
 	{
 		#pragma omp for schedule(static)
-		for (i = 0; i < A->getM(); i++)
+		for (i = 0; i < A.getM(); i++)
 		{
-			for (j = 0; j < B->getN(); j++)
+			for (j = 0; j < B.getN(); j++)
 			{
 				float temp = 0;
-				for (k = 0; k < A->getN(); k++)
+				for (k = 0; k < A.getN(); k++)
 				{
-					temp += A->getAt(i, k) * B->getAt(k, j);
+					temp = temp + A.getAt(i, k) * B.getAt(k, j);
 				}
-				result->setAt(i, j, temp);
-				std::string iteration = "C(" + std::to_string(i) + "," + std::to_string(j) + ") - w¹tek #" + std::to_string(omp_get_thread_num());
-				std::cout << iteration << std::endl;
+				result.setAt(i, j, temp);
+				//std::string iteration = "C(" + std::to_string(i) + "," + std::to_string(j) + ") - w¹tek #" + std::to_string(omp_get_thread_num());
+				//std::cout << iteration << std::endl;
 			}
 		}
-	}
-
-	return result;
+	};
 }

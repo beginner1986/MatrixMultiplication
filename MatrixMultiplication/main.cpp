@@ -105,8 +105,6 @@ void multiply(const Matrix& A, const Matrix& B, Matrix &result)
 					temp = temp + A.getAt(i, k) * B.getAt(k, j);
 				}
 				result.setAt(i, j, temp);
-				//std::string iteration = "C(" + std::to_string(i) + "," + std::to_string(j) + ") - w¹tek #" + std::to_string(omp_get_thread_num());
-				//std::cout << iteration << std::endl;
 			}
 		}
 	};

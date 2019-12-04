@@ -15,6 +15,15 @@ Matrix::Matrix(std::string fileName)
 	std::ifstream file;
 	file.open(fileName, std::ifstream::in);
 
+	try {
+		file.exceptions(file.failbit);
+	}
+	catch (const std::ios_base::failure & e)
+	{
+		std::cout << "Nie mo¿na otworzyæ pliku" << std::endl;
+		exit(0);
+	}
+
 	// read the matrix size
 	file >> m >> n;
 

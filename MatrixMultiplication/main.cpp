@@ -80,9 +80,9 @@ void multiply(const Matrix& A, const Matrix& B, Matrix &result)
 	
 	// perform the multiplication
 	int i, j, k;
-	#pragma omp parallel shared(A, B, result) private(i, j, k)
+//	#pragma omp parallel shared(A, B, result) private(i, j, k)
 	{
-		#pragma omp for schedule(static)
+//		#pragma omp for schedule(static)
 		for (i = 0; i < A.getM(); i++)
 		{
 			for (j = 0; j < B.getN(); j++)

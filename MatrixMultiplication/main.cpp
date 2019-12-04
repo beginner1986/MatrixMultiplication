@@ -4,7 +4,7 @@
 #include <omp.h>
 #include "Matrix.h"
 
-Matrix* readFromFile(std::string matrixName);
+Matrix* readFromFile(std::string fileName);
 void saveToFile(Matrix& matrix);
 void multiply(const Matrix& A, const Matrix& B, Matrix &result);
 
@@ -14,8 +14,25 @@ int main()
 	setlocale(LC_ALL, "polish");
 
 	// read the matrices to multiply
-	Matrix *A = readFromFile("A");
-	Matrix *B = readFromFile("B");
+	Matrix* A, * B;
+	std::string matrixAFileName, matrixBFileName;
+	std::cout << "Podaj nazwy plików z macierzami [A B]: ";
+	std::cin >> matrixAFileName >> matrixBFileName;
+
+	#pragma omp parallel
+	{
+		#pragma omp sections
+		{
+			#pragma omp section
+			{
+				A = readFromFile(matrixAFileName);
+			}
+			#pragma omp section
+			{
+				B = readFromFile(matrixBFileName);
+			}
+		}
+	}
 
 	// prepare the result matrix
 	Matrix *C = new Matrix(A->getN(), B->getM());
@@ -42,18 +59,13 @@ int main()
 	return 0;
 }
 
-Matrix* readFromFile(std::string matrixName)
+Matrix* readFromFile(std::string fileName)
 {
-	// get file name
-	std::string fileName;
-	std::cout << "Podaj nazwê pliku z macierz¹ " << matrixName << ": ";
-	std::cin >> fileName;
-
 	// create the matrix and return it
 	Matrix* result = new Matrix(fileName);
 	
 	// success info
-	std::cout << "Macierz " << matrixName << " zosta³a poprawnie wczytana." << std::endl;
+	std::cout << "Macierz " << fileName << " zosta³a poprawnie wczytana." << std::endl;
 
 	return result;
 }

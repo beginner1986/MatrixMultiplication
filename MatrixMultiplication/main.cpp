@@ -5,13 +5,10 @@
 #include <omp.h>
 #include "Matrix.h"
 
-double multiplyI(const Matrix& A, const Matrix& B, Matrix &result, int threadsNumber);
+double multiplyI(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber);
 double multiplyJ(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber);
 double multiplyK(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber);
 
-double timesI[5][6];
-double timesJ[5][6];
-double timesK[5][6];
 
 int main()
 {
@@ -23,6 +20,10 @@ int main()
 	std::vector<int> sizes{ 100, 500, 1000, 2000 };
 
 	// result arrays rows initialization
+	double timesI[5][6];
+	double timesJ[5][6];
+	double timesK[5][6];
+
 	for (size_t i=0; i<sizes.size(); i++)
 	{
 		timesI[i][0] = sizes[i];

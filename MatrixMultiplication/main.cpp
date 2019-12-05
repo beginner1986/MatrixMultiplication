@@ -1,12 +1,17 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+#include <vector>
 #include <omp.h>
 #include "Matrix.h"
 
-Matrix* readFromFile(std::string fileName);
-void saveToFile(Matrix& matrix);
-void multiply(const Matrix& A, const Matrix& B, Matrix &result);
+double multiplyI(const Matrix& A, const Matrix& B, Matrix &result, int threadsNumber);
+double multiplyJ(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber);
+double multiplyK(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber);
+
+double timesI[5][6];
+double timesJ[5][6];
+double timesK[5][6];
 
 int main()
 {
@@ -15,86 +20,88 @@ int main()
 
 	// read the matrices to multiply
 	Matrix* A, * B;
-	std::string matrixAFileName, matrixBFileName;
-	std::cout << "Podaj nazwy plików z macierzami [A B]: ";
-	std::cin >> matrixAFileName >> matrixBFileName;
+	std::vector<int> sizes{ 100, 500, 1000, 2000 };
 
-	#pragma omp parallel
+	// result arrays rows initialization
+	for (size_t i=0; i<sizes.size(); i++)
 	{
-		#pragma omp sections
-		{
-			#pragma omp section
-			{
-				A = readFromFile(matrixAFileName);
-			}
-			#pragma omp section
-			{
-				B = readFromFile(matrixBFileName);
-			}
-		}
+		timesI[i][0] = sizes[i];
+		timesJ[i][0] = sizes[i];
+		timesK[i][0] = sizes[i];
 	}
 
-	// prepare the result matrix
-	Matrix *C = new Matrix(A->getN(), B->getM());
+	// test cases
+	for (int numberOfThreads = 1; numberOfThreads <= 16; numberOfThreads *= 2)
+	{
 
-	// start time masurement
-	auto startTime = std::chrono::system_clock::now();
+		// result arrays columns initialization
+		int column = 0;
+		timesI[0][column] = numberOfThreads;
 
-	// multiply the matrices
-	multiply(*A, *B, *C);
+		for (size_t row=0; row<sizes.size(); row++)
+		{
+			int size = sizes[row];
 
-	// end time and time difference print
-	auto endTime = std::chrono::system_clock::now();
-	std::chrono::duration<double> time = endTime - startTime;
-	std::cout << "Obliczenia zajê³y " << time.count() << "s." << std::endl;
+			std::string matrixAFileName = "a" + std::to_string(size);
+			std::string matrixBFileName = "b" + std::to_string(size);
+			std::string matrixCFileName = "c" + std::to_string(size);
 
-	// save result to file
-	saveToFile(*C);
+			#pragma omp parallel
+			{
+				#pragma omp sections
+				{
+					#pragma omp section
+					{
+						A = new Matrix(matrixAFileName);
+					}
+					#pragma omp section
+					{
+						B = new Matrix(matrixBFileName);
+					}
+				}
+			}
 
-	// free the memory
-	delete A, B, C;
+			// prepare the result matrix
+			Matrix *C = new Matrix(A->getN(), B->getM());
+
+			// multiply the matrices
+			timesI[row][column] = multiplyI(*A, *B, *C, numberOfThreads);
+			C->writeToFile(matrixCFileName + "i");
+			timesJ[row][column] = multiplyJ(*A, *B, *C, numberOfThreads);
+			C->writeToFile(matrixCFileName + "j");
+			timesK[row][column] = multiplyK(*A, *B, *C, numberOfThreads);
+			C->writeToFile(matrixCFileName + "k");
+
+			// save result to file
+
+			// free the memory
+			delete A, B, C;
+		}
+	}
 
 	// hold the screen
 	std::cin.get();
 	return 0;
 }
 
-Matrix* readFromFile(std::string fileName)
+double multiplyI(const Matrix& A, const Matrix& B, Matrix &result, int threadsNumber)
 {
-	// create the matrix and return it
-	Matrix* result = new Matrix(fileName);
-	
-	// success info
-	std::cout << "Macierz " << fileName << " zosta³a poprawnie wczytana." << std::endl;
+	// start time masurement
+	auto startTime = std::chrono::system_clock::now();
 
-	return result;
-}
-
-void saveToFile(Matrix& matrix)
-{
-	// get file name
-	std::string fileName;
-	std::cout << "Podaj nazwê pliku wynikowego C = A * B: ";
-	std::cin >> fileName;
-
-	// save matrix to file
-	matrix.writeToFile(fileName);
-}
-
-void multiply(const Matrix& A, const Matrix& B, Matrix &result)
-{
 	// check multiplication correctness condition
 	if (A.getN() != B.getM())
 	{
 		std::cout << "Nie mo¿na pomno¿yæ tych macierzy!" << std::endl;
-		return;
+		exit(-1);
 	}
 	
 	// perform the multiplication
 	int i, j, k;
-//	#pragma omp parallel shared(A, B, result) private(i, j, k)
+	omp_set_num_threads(threadsNumber);
+	#pragma omp parallel shared(A, B, result) private(i, j, k)
 	{
-//		#pragma omp for schedule(static)
+  		#pragma omp for
 		for (i = 0; i < A.getM(); i++)
 		{
 			for (j = 0; j < B.getN(); j++)
@@ -108,4 +115,91 @@ void multiply(const Matrix& A, const Matrix& B, Matrix &result)
 			}
 		}
 	};
+
+	// end time and time difference print
+	auto endTime = std::chrono::system_clock::now();
+	std::chrono::duration<double> time = endTime - startTime;
+	std::cout << "Pêtla i" << "\t\t" << "Wymiar: " << A.getM() << "\t" << "w¹tków: " << threadsNumber << "\t" << "czas: " << time.count() << "s." << std::endl;
+
+	return time.count();
+}
+
+double multiplyJ(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber)
+{
+	// start time masurement
+	auto startTime = std::chrono::system_clock::now();
+
+	// check multiplication correctness condition
+	if (A.getN() != B.getM())
+	{
+		std::cout << "Nie mo¿na pomno¿yæ tych macierzy!" << std::endl;
+		exit(-1);
+	}
+
+	// perform the multiplication
+	int i, j, k;
+	omp_set_num_threads(threadsNumber);
+		for (i = 0; i < A.getM(); i++)
+		{
+		#pragma omp parallel shared(A, B, result, i) private(j, k)
+			{
+			#pragma omp for
+			for (j = 0; j < B.getN(); j++)
+			{
+				float temp = 0;
+				for (k = 0; k < A.getN(); k++)
+				{
+					temp = temp + A.getAt(i, k) * B.getAt(k, j);
+				}
+				result.setAt(i, j, temp);
+			}
+		}
+	};
+
+	// end time and time difference print
+	auto endTime = std::chrono::system_clock::now();
+	std::chrono::duration<double> time = endTime - startTime;
+	std::cout << "Pêtla j" << "\t\t" << "Wymiar: " << A.getM() << "\t" << "w¹tków: " << threadsNumber << "\t" << "czas: " << time.count() << "s." << std::endl;
+
+	return time.count();
+}
+
+double multiplyK(const Matrix& A, const Matrix& B, Matrix& result, int threadsNumber)
+{
+	// start time masurement
+	auto startTime = std::chrono::system_clock::now();
+
+	// check multiplication correctness condition
+	if (A.getN() != B.getM())
+	{
+		std::cout << "Nie mo¿na pomno¿yæ tych macierzy!" << std::endl;
+		exit(-1);
+	}
+
+	// perform the multiplication
+	int i, j, k;
+	omp_set_num_threads(threadsNumber);
+		for (i = 0; i < A.getM(); i++)
+		{
+			for (j = 0; j < B.getN(); j++)
+			{
+				float temp = 0;
+				#pragma omp parallel shared(A, B, result, i, j, temp) private(k)
+				{
+					#pragma omp for
+					for (k = 0; k < A.getN(); k++)
+					{
+						temp = temp + A.getAt(i, k) * B.getAt(k, j);
+					}
+					result.setAt(i, j, temp);
+			}
+		}
+	};
+
+	// end time and time difference print
+	auto endTime = std::chrono::system_clock::now();
+	std::chrono::duration<double> time = endTime - startTime;
+	std::cout << "Pêtla k" << "\t\t" << "Wymiar: " << A.getM() << "\t" << "w¹tków: " << threadsNumber << "\t" << "czas: " << time.count() << "s." << std::endl;
+
+	return time.count();
 }
